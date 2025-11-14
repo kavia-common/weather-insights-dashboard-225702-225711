@@ -6,6 +6,7 @@ import CurrentWeatherCard from '../components/CurrentWeatherCard';
 import DailyForecast from '../components/DailyForecast';
 import HourlyChart from '../components/HourlyChart';
 import HourlyPrecipChart from '../components/HourlyPrecipChart';
+import HourlyWindChart from '../components/HourlyWindChart';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openMeteo.js';
 import { detectMyLocation } from '../lib/geolocation.js';
@@ -265,6 +266,10 @@ export default function Home() {
               units={normalizedUnits}
             />
             <HourlyPrecipChart
+              points={forecast?.hourly || []}
+              units={normalizedUnits}
+            />
+            <HourlyWindChart
               points={forecast?.hourly || []}
               units={normalizedUnits}
             />
