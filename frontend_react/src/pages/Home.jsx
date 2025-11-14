@@ -28,6 +28,15 @@ export default function Home() {
   const [permissionBlocked, setPermissionBlocked] = useLocalStorage('location_blocked', false);
   const [dismissedBanner, setDismissedBanner] = useLocalStorage('location_banner_dismissed', false);
 
+  // One-time onboarding flag: avoid auto geolocation after first-run
+  const [geoOnboarded, setGeoOnboarded] = useState(() => {
+    try {
+      return window.localStorage.getItem('geo_onboarded') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const normalizedUnits = useMemo(() => normalizeUnits(units), [units]);
 
   // Restore from ?city= query
@@ -41,13 +50,58 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initial behavior: Do not auto-trigger geolocation; instead show modal if no selected.
+  // First-load only geolocation attempt when no selected and no favorites and not onboarded
   useEffect(() => {
-    if (!selected) {
-      setShowLocationModal(true);
+    const shouldAttempt =
+      !geoOnboarded &&
+      !selected &&
+      (!favorites || favorites.length === 0);
+
+    if (!shouldAttempt) {
+      // If a location already exists or we've onboarded, don't prompt automatically
+      if (!selected) {
+        // For new users without auto attempt, show modal gently
+        setShowLocationModal(true);
+      }
+      return;
     }
+
+    // Attempt geolocation silently on first load
+    const run = async () => {
+      try {
+        setLocating(true);
+        setGeoMessage('Detecting location…');
+        const my = await detectMyLocation({
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 60000,
+          label: 'My Location'
+        });
+        setSelected(my); // Persisted by hook
+        setPermissionBlocked(false);
+        setShowLocationModal(false);
+        setDismissedBanner(true);
+        setGeoMessage('');
+      } catch (e) {
+        // Do not block; show modal/banner for manual enable
+        setGeoMessage('Location unavailable or permission denied.');
+        setPermissionBlocked(true);
+        setShowLocationModal(true);
+        setTimeout(() => setGeoMessage(''), 3000);
+      } finally {
+        setLocating(false);
+        try {
+          window.localStorage.setItem('geo_onboarded', 'true');
+        } catch {
+          // ignore
+        }
+        setGeoOnboarded(true);
+      }
+    };
+
+    run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // run once on mount for first-load behavior
 
   // Fetch on selected or units change
   useEffect(() => {
@@ -71,6 +125,15 @@ export default function Home() {
     ? `${selected.name}${selected.admin1 ? ', ' + selected.admin1 : ''}${selected.country ? ', ' + selected.country : ''}`
     : '—';
 
+  const persistGeoOnboarded = () => {
+    try {
+      window.localStorage.setItem('geo_onboarded', 'true');
+    } catch {
+      // ignore
+    }
+    setGeoOnboarded(true);
+  };
+
   const handleAddFavorite = () => {
     if (!selected) return;
     const exists = favorites.some(f => f.name === selected.name && f.latitude === selected.latitude && f.longitude === selected.longitude);
@@ -80,6 +143,7 @@ export default function Home() {
     setFavorites(favorites.filter(f => !(f.latitude === geo.latitude && f.longitude === geo.longitude && f.name === geo.name)));
   };
 
+  // On-demand location detection (header button) — does not alter onboarding policy
   const attemptDetectLocation = async () => {
     try {
       setLocating(true);
@@ -90,11 +154,10 @@ export default function Home() {
       setPermissionBlocked(false);
       setShowLocationModal(false);
       setDismissedBanner(true); // user enabled successfully; hide banner
+      persistGeoOnboarded(); // mark as onboarded so we don't auto-prompt next loads
     } catch (e) {
-      // If error code is PERMISSION_DENIED or message indicates blocked, keep modal with guidance and keep banner available
       setGeoMessage('Location unavailable or permission denied.');
       setPermissionBlocked(true);
-      // keep modal open to show guidance
       setTimeout(() => setGeoMessage(''), 4000);
     } finally {
       setLocating(false);
@@ -102,7 +165,7 @@ export default function Home() {
   };
 
   const handleUseMyLocation = async () => {
-    // header "Use my location" button preserved
+    // header "Use my location" button preserved — on-demand refresh
     await attemptDetectLocation();
   };
 
@@ -114,6 +177,7 @@ export default function Home() {
     // Let user proceed without location; keep banner available
     setShowLocationModal(false);
     setDismissedBanner(false);
+    persistGeoOnboarded(); // avoid re-prompting in subsequent loads
   };
 
   const showBanner = !selected && !dismissedBanner;
@@ -145,7 +209,7 @@ export default function Home() {
           <div className="brand">Weather Dashboard</div>
           <div className="header-actions">
             <div style={{ minWidth: 260 }}>
-              <SearchBar onSelect={(g) => setSelected(g)} />
+              <SearchBar onSelect={(g) => { setSelected(g); persistGeoOnboarded(); }} />
               <div className="search-status" aria-live="polite">
                 {locating && <span className="muted">Detecting location…</span>}
                 {!locating && geoMessage && <span className="error">{geoMessage}</span>}
@@ -180,7 +244,7 @@ export default function Home() {
       <main className="main">
         <FavoritesSidebar
           favorites={favorites}
-          onSelect={(g) => setSelected(g)}
+          onSelect={(g) => { setSelected(g); persistGeoOnboarded(); }}
           onRemove={handleRemoveFavorite}
         />
 
