@@ -8,6 +8,7 @@ import HourlyChart from '../components/HourlyChart';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openMeteo.js';
 import { detectMyLocation } from '../lib/geolocation.js';
+import LocationPermissionModal from '../components/LocationPermissionModal';
 
 export default function Home() {
   /** Main dashboard page: header, sidebar, content panels. */
@@ -22,6 +23,11 @@ export default function Home() {
   const [locating, setLocating] = useState(false);
   const [geoMessage, setGeoMessage] = useState('');
 
+  // In-app location modal and banner state
+  const [showLocationModal, setShowLocationModal] = useLocalStorage('show_location_modal', true);
+  const [permissionBlocked, setPermissionBlocked] = useLocalStorage('location_blocked', false);
+  const [dismissedBanner, setDismissedBanner] = useLocalStorage('location_banner_dismissed', false);
+
   const normalizedUnits = useMemo(() => normalizeUnits(units), [units]);
 
   // Restore from ?city= query
@@ -35,36 +41,11 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Try geolocation on first mount if no selected location or favorites/history
+  // Initial behavior: Do not auto-trigger geolocation; instead show modal if no selected.
   useEffect(() => {
-    const shouldAttemptGeo = !selected; // only if nothing selected yet
-    if (!shouldAttemptGeo) return;
-
-    let cancelled = false;
-    const attempt = async () => {
-      try {
-        setLocating(true);
-        setGeoMessage('Detecting location…');
-        const my = await detectMyLocation({ enableHighAccuracy: false, timeout: 8000, maximumAge: 60000, label: 'My Location' });
-        if (!cancelled) {
-          setSelected(my);
-          setGeoMessage(''); // clear on success
-        }
-      } catch (e) {
-        // Silently ignore per requirements; show subtle inline message then clear after a short delay
-        if (!cancelled) {
-          setGeoMessage('Unable to detect location.');
-          setTimeout(() => setGeoMessage(''), 3000);
-        }
-      } finally {
-        if (!cancelled) setLocating(false);
-      }
-    };
-    attempt();
-
-    return () => {
-      cancelled = true;
-    };
+    if (!selected) {
+      setShowLocationModal(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -99,23 +80,66 @@ export default function Home() {
     setFavorites(favorites.filter(f => !(f.latitude === geo.latitude && f.longitude === geo.longitude && f.name === geo.name)));
   };
 
-  const handleUseMyLocation = async () => {
+  const attemptDetectLocation = async () => {
     try {
       setLocating(true);
       setGeoMessage('Detecting location…');
       const my = await detectMyLocation({ enableHighAccuracy: false, timeout: 8000, maximumAge: 60000, label: 'My Location' });
       setSelected(my);
       setGeoMessage('');
+      setPermissionBlocked(false);
+      setShowLocationModal(false);
+      setDismissedBanner(true); // user enabled successfully; hide banner
     } catch (e) {
+      // If error code is PERMISSION_DENIED or message indicates blocked, keep modal with guidance and keep banner available
       setGeoMessage('Location unavailable or permission denied.');
+      setPermissionBlocked(true);
+      // keep modal open to show guidance
       setTimeout(() => setGeoMessage(''), 4000);
     } finally {
       setLocating(false);
     }
   };
 
+  const handleUseMyLocation = async () => {
+    // header "Use my location" button preserved
+    await attemptDetectLocation();
+  };
+
+  const handleAllowFromModal = async () => {
+    await attemptDetectLocation();
+  };
+
+  const handleSkipFromModal = () => {
+    // Let user proceed without location; keep banner available
+    setShowLocationModal(false);
+    setDismissedBanner(false);
+  };
+
+  const showBanner = !selected && !dismissedBanner;
+
   return (
     <div>
+      {/* Top banner keeps CTA accessible when modal is dismissed or permission denied */}
+      {showBanner && (
+        <div className="top-banner" role="region" aria-label="Location enable banner">
+          <div className="inner">
+            <div className="msg">
+              <span aria-hidden>📍</span>
+              <span>Enable location for faster local weather.</span>
+            </div>
+            <div className="actions">
+              <button className="btn-outline" onClick={() => setShowLocationModal(true)} aria-label="Enable location">
+                Enable location
+              </button>
+              <button className="link" onClick={() => setDismissedBanner(true)} aria-label="Dismiss">
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="header">
         <div className="header-inner">
           <div className="brand">Weather Dashboard</div>
@@ -127,6 +151,15 @@ export default function Home() {
                 {!locating && geoMessage && <span className="error">{geoMessage}</span>}
               </div>
             </div>
+            {/* Keep header CTA accessible */}
+            <button
+              className="btn-outline"
+              onClick={() => setShowLocationModal(true)}
+              aria-label="Enable location"
+              title="Enable location"
+            >
+              Enable location
+            </button>
             <button
               className="btn"
               onClick={handleUseMyLocation}
@@ -163,6 +196,14 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      <LocationPermissionModal
+        open={showLocationModal && !selected}
+        blocked={permissionBlocked}
+        onAllow={handleAllowFromModal}
+        onSkip={handleSkipFromModal}
+        onClose={() => setShowLocationModal(false)}
+      />
     </div>
   );
 }

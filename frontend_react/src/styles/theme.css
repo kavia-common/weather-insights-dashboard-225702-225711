@@ -268,3 +268,121 @@ body {
 @media (max-width: 900px) {
   .row-2 { grid-template-columns: 1fr; }
 }
+
+/* Location Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modal-panel {
+  position: relative;
+  width: min(560px, calc(100% - 24px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  padding: 18px;
+}
+.modal-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.modal-icon {
+  font-size: 28px;
+}
+.modal-desc {
+  color: var(--muted);
+  margin: 6px 0 10px 0;
+}
+.modal-alert {
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: #fff5f5;
+  color: var(--error);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+/* Top banner for location enablement */
+.top-banner {
+  background: linear-gradient(90deg, rgba(37,99,235,0.10), rgba(245,158,11,0.10));
+  border-bottom: 1px dashed var(--border);
+  color: var(--text);
+}
+.top-banner .inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.top-banner .msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.top-banner .actions {
+  display: flex;
+  gap: 8px;
+}
+.top-banner .link {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Header "Enable location" CTA variant */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
