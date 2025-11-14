@@ -7,6 +7,7 @@ import DailyForecast from '../components/DailyForecast';
 import HourlyChart from '../components/HourlyChart';
 import HourlyPrecipChart from '../components/HourlyPrecipChart';
 import HourlyWindChart from '../components/HourlyWindChart';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openMeteo.js';
 import { detectMyLocation } from '../lib/geolocation.js';
@@ -235,6 +236,7 @@ export default function Home() {
             >
               📍 Use my location
             </button>
+            <ThemeToggle />
             <UnitsToggle units={normalizedUnits} onChange={setUnits} />
             <button className="btn" onClick={handleAddFavorite} aria-label="Add to favorites" disabled={!selected}>
               ☆ Favorite
