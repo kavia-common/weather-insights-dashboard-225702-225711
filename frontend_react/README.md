@@ -10,6 +10,7 @@ A modern React single‑page app showing current weather, 7‑day forecast, and 
 - Favorites (add/remove) persisted in localStorage
 - Units toggle (°C/°F, km/h|mph, mm|in) persisted in localStorage
 - Optional `?city=` query pre-selection hint
+- Geolocation support (auto-detect on first load + "Use my location" button)
 - Responsive, accessible UI
 
 ## Getting Started
@@ -18,6 +19,12 @@ npm install
 npm start
 ```
 Open http://localhost:3000
+
+## Geolocation
+- On first load, the app attempts to detect your current location via the browser Geolocation API (over HTTPS). If allowed and successful, the dashboard will load weather for “My Location”.
+- If permission is denied, unavailable, or times out, the app falls back silently without interruption; you can still search for a city manually.
+- A “Use my location” button is available in the header to trigger detection on demand.
+- No location data is persisted beyond local selection in your browser (localStorage). No external geolocation services are used.
 
 ## Environment (optional)
 Create `.env` from `.env.example` to override:

@@ -7,6 +7,7 @@ import DailyForecast from '../components/DailyForecast';
 import HourlyChart from '../components/HourlyChart';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openMeteo.js';
+import { detectMyLocation } from '../lib/geolocation.js';
 
 export default function Home() {
   /** Main dashboard page: header, sidebar, content panels. */
@@ -16,6 +17,10 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [forecast, setForecast] = useState(null);
+
+  // Geolocation transient UI state
+  const [locating, setLocating] = useState(false);
+  const [geoMessage, setGeoMessage] = useState('');
 
   const normalizedUnits = useMemo(() => normalizeUnits(units), [units]);
 
@@ -27,6 +32,39 @@ export default function Home() {
       // If city provided, just set a display placeholder; user should search to resolve coords.
       setError(`Tip: Use the search bar to resolve "${city}" and select the result.`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Try geolocation on first mount if no selected location or favorites/history
+  useEffect(() => {
+    const shouldAttemptGeo = !selected; // only if nothing selected yet
+    if (!shouldAttemptGeo) return;
+
+    let cancelled = false;
+    const attempt = async () => {
+      try {
+        setLocating(true);
+        setGeoMessage('Detecting location…');
+        const my = await detectMyLocation({ enableHighAccuracy: false, timeout: 8000, maximumAge: 60000, label: 'My Location' });
+        if (!cancelled) {
+          setSelected(my);
+          setGeoMessage(''); // clear on success
+        }
+      } catch (e) {
+        // Silently ignore per requirements; show subtle inline message then clear after a short delay
+        if (!cancelled) {
+          setGeoMessage('Unable to detect location.');
+          setTimeout(() => setGeoMessage(''), 3000);
+        }
+      } finally {
+        if (!cancelled) setLocating(false);
+      }
+    };
+    attempt();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,6 +99,21 @@ export default function Home() {
     setFavorites(favorites.filter(f => !(f.latitude === geo.latitude && f.longitude === geo.longitude && f.name === geo.name)));
   };
 
+  const handleUseMyLocation = async () => {
+    try {
+      setLocating(true);
+      setGeoMessage('Detecting location…');
+      const my = await detectMyLocation({ enableHighAccuracy: false, timeout: 8000, maximumAge: 60000, label: 'My Location' });
+      setSelected(my);
+      setGeoMessage('');
+    } catch (e) {
+      setGeoMessage('Location unavailable or permission denied.');
+      setTimeout(() => setGeoMessage(''), 4000);
+    } finally {
+      setLocating(false);
+    }
+  };
+
   return (
     <div>
       <header className="header">
@@ -69,7 +122,20 @@ export default function Home() {
           <div className="header-actions">
             <div style={{ minWidth: 260 }}>
               <SearchBar onSelect={(g) => setSelected(g)} />
+              <div className="search-status" aria-live="polite">
+                {locating && <span className="muted">Detecting location…</span>}
+                {!locating && geoMessage && <span className="error">{geoMessage}</span>}
+              </div>
             </div>
+            <button
+              className="btn"
+              onClick={handleUseMyLocation}
+              aria-label="Use my current location"
+              disabled={locating}
+              title="Use my location"
+            >
+              📍 Use my location
+            </button>
             <UnitsToggle units={normalizedUnits} onChange={setUnits} />
             <button className="btn" onClick={handleAddFavorite} aria-label="Add to favorites" disabled={!selected}>
               ☆ Favorite
