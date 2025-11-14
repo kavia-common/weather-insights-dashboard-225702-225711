@@ -255,8 +255,14 @@ export default function Home() {
           <CurrentWeatherCard locationLabel={locationLabel} current={forecast?.current || null} units={normalizedUnits} />
 
           <div className="row-2">
-            <DailyForecast items={forecast?.daily || []} units={normalizedUnits} />
-            <HourlyChart points={forecast?.hourly || []} units={normalizedUnits} />
+            <DailyForecast
+              items={forecast?.daily || []}
+              units={normalizedUnits}
+            />
+            <HourlyChart
+              points={forecast?.hourly || []}
+              units={normalizedUnits}
+            />
           </div>
         </section>
       </main>

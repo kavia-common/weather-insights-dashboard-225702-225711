@@ -33,11 +33,17 @@ export interface DailyForecastItem {
   temperature_2m_min: number | null;
   precipitation_sum: number | null;
   wind_speed_10m_max: number | null;
+  precipitation_probability_max?: number | null;
 }
 
 export interface HourlyPoint {
   time: string;
   temperature_2m: number | null;
+  precip_mm?: number | null;
+  precip_prob?: number | null; // percentage 0-100
+  wind_speed?: number | null;  // per selected units (km/h or mph)
+  wind_gust?: number | null;   // per selected units (km/h or mph)
+  humidity?: number | null;    // percentage
 }
 
 export interface ForecastResponse {
