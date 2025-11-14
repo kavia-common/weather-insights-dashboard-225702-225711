@@ -31,6 +31,10 @@ export default function Home() {
   const [permissionBlocked, setPermissionBlocked] = useLocalStorage('location_blocked', false);
   const [dismissedBanner, setDismissedBanner] = useLocalStorage('location_banner_dismissed', false);
 
+  // Offline / cached banner state
+  const [offline, setOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+  const [servedFromCache, setServedFromCache] = useState(false);
+
   // One-time onboarding flag: avoid auto geolocation after first-run
   const [geoOnboarded, setGeoOnboarded] = useState(() => {
     try {
@@ -124,6 +128,31 @@ export default function Home() {
     doFetch();
   }, [selected, normalizedUnits]);
 
+  // Listen for online/offline changes to surface offline banner
+  useEffect(() => {
+    const handleOnline = () => setOffline(false);
+    const handleOffline = () => setOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Listen to SW cache-hit messages to show "served from cache" banner briefly
+  useEffect(() => {
+    const onCacheHit = (e) => {
+      // If the message is for Open‑Meteo resource or same-origin static, show a banner
+      setServedFromCache(true);
+      // Auto hide after 4 seconds
+      const id = setTimeout(() => setServedFromCache(false), 4000);
+      return () => clearTimeout(id);
+    };
+    window.addEventListener('app:cache-hit', onCacheHit);
+    return () => window.removeEventListener('app:cache-hit', onCacheHit);
+  }, []);
+
   const locationLabel = selected
     ? `${selected.name}${selected.admin1 ? ', ' + selected.admin1 : ''}${selected.country ? ', ' + selected.country : ''}`
     : '—';
@@ -187,6 +216,29 @@ export default function Home() {
 
   return (
     <div>
+      {/* Offline/Cached banner */}
+      {(offline || servedFromCache) && (
+        <div className="top-banner" role="region" aria-label="Offline status banner">
+          <div className="inner">
+            <div className="msg">
+              <span aria-hidden>⚡</span>
+              <span>
+                {offline
+                  ? 'You are offline. Showing cached content where available.'
+                  : 'Showing cached content while updating in the background.'}
+              </span>
+            </div>
+            {!offline && (
+              <div className="actions">
+                <button className="link" onClick={() => setServedFromCache(false)} aria-label="Dismiss cached notice">
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Top banner keeps CTA accessible when modal is dismissed or permission denied */}
       {showBanner && (
         <div className="top-banner" role="region" aria-label="Location enable banner">
