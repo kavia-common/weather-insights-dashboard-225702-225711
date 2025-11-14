@@ -1,7 +1,7 @@
 import React from 'react';
 
 // PUBLIC_INTERFACE
-export default function FavoritesSidebar({ favorites, onSelect, onRemove }) {
+function FavoritesSidebar({ favorites, onSelect, onRemove }) {
   /** Sidebar listing favorite locations with click-to-load and remove action. */
   return (
     <aside className="sidebar" aria-label="Favorite locations">
@@ -28,3 +28,5 @@ export default function FavoritesSidebar({ favorites, onSelect, onRemove }) {
     </aside>
   );
 }
+
+export default React.memo(FavoritesSidebar);

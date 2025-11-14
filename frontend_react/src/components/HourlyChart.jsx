@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -9,9 +9,20 @@ import {
   CartesianGrid
 } from 'recharts';
 
-// PUBLIC_INTERFACE
-export default function HourlyChart({ points, units }) {
-  /** Lightweight hourly temperature line chart for next 24-48 hours. */
+/** PUBLIC_INTERFACE
+ * HourlyChart
+ * Lightweight hourly temperature line chart for next 24 hours.
+ */
+function HourlyChart({ points, units }) {
+  // Memoize transformation of points -> chart data (always call hook)
+  const fmt = useMemo(() => {
+    const src = Array.isArray(points) ? points : [];
+    return src.slice(0, 24).map((p) => ({
+      time: new Date(p.time).toLocaleTimeString([], { hour: '2-digit' }),
+      temp: p.temperature_2m != null ? Math.round(p.temperature_2m) : null
+    }));
+  }, [points]);
+
   if (!points || points.length === 0) {
     return (
       <div className="card">
@@ -20,10 +31,7 @@ export default function HourlyChart({ points, units }) {
       </div>
     );
   }
-  const fmt = points.slice(0, 24).map((p) => ({
-    time: new Date(p.time).toLocaleTimeString([], { hour: '2-digit' }),
-    temp: p.temperature_2m != null ? Math.round(p.temperature_2m) : null
-  }));
+
   const tempUnit = units.temperature === 'celsius' ? '°C' : '°F';
 
   return (
@@ -36,7 +44,7 @@ export default function HourlyChart({ points, units }) {
             <XAxis dataKey="time" stroke="#6b7280" />
             <YAxis stroke="#6b7280" tickFormatter={(v) => `${v}${tempUnit}`} />
             <Tooltip
-              formatter={(value: any) => [`${value}${tempUnit}`, 'Temp']}
+              formatter={(value) => [`${value}${tempUnit}`, 'Temp']}
               labelStyle={{ color: '#111827' }}
               contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }}
             />
@@ -47,3 +55,5 @@ export default function HourlyChart({ points, units }) {
     </div>
   );
 }
+
+export default React.memo(HourlyChart);

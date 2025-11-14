@@ -2,7 +2,7 @@ import React from 'react';
 import { weatherIcon, weatherLabel } from '../lib/icons.js';
 
 // PUBLIC_INTERFACE
-export default function CurrentWeatherCard({ locationLabel, current, units }) {
+function CurrentWeatherCard({ locationLabel, current, units }) {
   /** Surface card showing current conditions with icon and stats. */
   if (!current) {
     return (
@@ -57,3 +57,6 @@ export default function CurrentWeatherCard({ locationLabel, current, units }) {
     </div>
   );
 }
+
+// Export memoized to avoid re-renders on unrelated state changes
+export default React.memo(CurrentWeatherCard);

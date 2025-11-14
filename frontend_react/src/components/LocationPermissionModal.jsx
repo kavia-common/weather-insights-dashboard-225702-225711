@@ -14,7 +14,7 @@ import React, { useEffect, useRef, useCallback } from 'react';
  */
 
 // PUBLIC_INTERFACE
-export default function LocationPermissionModal({
+function LocationPermissionModal({
   open,
   onAllow,
   onSkip,
@@ -186,3 +186,5 @@ export default function LocationPermissionModal({
     </div>
   );
 }
+
+export default React.memo(LocationPermissionModal);

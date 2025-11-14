@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { geocodeCity } from '../lib/openMeteo.js';
 
 // PUBLIC_INTERFACE
-export default function SearchBar({ onSelect, initialQuery = '' }) {
+function SearchBar({ onSelect, initialQuery = '' }) {
   /** Search bar hitting geocoding API and allowing selection of top results. */
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState([]);
@@ -92,3 +92,5 @@ export default function SearchBar({ onSelect, initialQuery = '' }) {
     </div>
   );
 }
+
+export default React.memo(SearchBar);

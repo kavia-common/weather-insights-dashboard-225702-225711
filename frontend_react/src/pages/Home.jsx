@@ -1,17 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import SearchBar from '../components/SearchBar';
 import UnitsToggle from '../components/UnitsToggle';
 import FavoritesSidebar from '../components/FavoritesSidebar';
 import CurrentWeatherCard from '../components/CurrentWeatherCard';
 import DailyForecast from '../components/DailyForecast';
-import HourlyChart from '../components/HourlyChart';
-import HourlyPrecipChart from '../components/HourlyPrecipChart';
-import HourlyWindChart from '../components/HourlyWindChart';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openMeteo.js';
 import { detectMyLocation } from '../lib/geolocation.js';
 import LocationPermissionModal from '../components/LocationPermissionModal';
+
+// Lazy imports should remain at top-level but after React import and can be grouped with other imports
+const HourlyChart = React.lazy(() => import('../components/HourlyChart'));
+const HourlyPrecipChart = React.lazy(() => import('../components/HourlyPrecipChart'));
+const HourlyWindChart = React.lazy(() => import('../components/HourlyWindChart'));
 
 export default function Home() {
   /** Main dashboard page: header, sidebar, content panels. */
@@ -315,18 +317,24 @@ export default function Home() {
               items={forecast?.daily || []}
               units={normalizedUnits}
             />
-            <HourlyChart
-              points={forecast?.hourly || []}
-              units={normalizedUnits}
-            />
-            <HourlyPrecipChart
-              points={forecast?.hourly || []}
-              units={normalizedUnits}
-            />
-            <HourlyWindChart
-              points={forecast?.hourly || []}
-              units={normalizedUnits}
-            />
+            <Suspense fallback={<div className="card"><div className="muted">Loading chart…</div></div>}>
+              <HourlyChart
+                points={forecast?.hourly || []}
+                units={normalizedUnits}
+              />
+            </Suspense>
+            <Suspense fallback={<div className="card"><div className="muted">Loading precipitation…</div></div>}>
+              <HourlyPrecipChart
+                points={forecast?.hourly || []}
+                units={normalizedUnits}
+              />
+            </Suspense>
+            <Suspense fallback={<div className="card"><div className="muted">Loading wind…</div></div>}>
+              <HourlyWindChart
+                points={forecast?.hourly || []}
+                units={normalizedUnits}
+              />
+            </Suspense>
           </div>
         </section>
       </main>

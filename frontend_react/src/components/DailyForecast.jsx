@@ -2,7 +2,7 @@ import React from 'react';
 import { weatherIcon, weatherLabel } from '../lib/icons.js';
 
 // PUBLIC_INTERFACE
-export default function DailyForecast({ items, units }) {
+function DailyForecast({ items, units }) {
   /** Grid of 7-day forecast cards. */
   if (!items || items.length === 0) {
     return (
@@ -42,3 +42,6 @@ export default function DailyForecast({ items, units }) {
     </div>
   );
 }
+
+// Export memoized to reduce re-renders
+export default React.memo(DailyForecast);

@@ -1,7 +1,7 @@
 import React from 'react';
 
 // PUBLIC_INTERFACE
-export default function UnitsToggle({ units, onChange }) {
+function UnitsToggle({ units, onChange }) {
   /** Toggle between metric and imperial units. */
   const isMetric = units.temperature === 'celsius';
 
@@ -24,3 +24,5 @@ export default function UnitsToggle({ units, onChange }) {
     </button>
   );
 }
+
+export default React.memo(UnitsToggle);

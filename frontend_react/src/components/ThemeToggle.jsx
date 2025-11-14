@@ -12,7 +12,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
  */
 
 // PUBLIC_INTERFACE
-export default function ThemeToggle() {
+function ThemeToggle() {
   /** Button to toggle site theme with persistence and OS preference fallback. */
   const [storedTheme, setStoredTheme] = useLocalStorage('theme', null);
 
@@ -55,3 +55,5 @@ export default function ThemeToggle() {
     </button>
   );
 }
+
+export default React.memo(ThemeToggle);
