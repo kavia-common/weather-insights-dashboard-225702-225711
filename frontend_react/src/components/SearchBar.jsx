@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { geocodeCity } from '../lib/openMeteo.js';
+import { geocodeCity } from '../lib/openWeather.js';
 
 // PUBLIC_INTERFACE
 export default function SearchBar({ onSelect, initialQuery = '' }) {

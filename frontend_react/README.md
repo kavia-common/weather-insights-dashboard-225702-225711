@@ -1,9 +1,9 @@
-# Weather Dashboard (Open‑Meteo)
+# Weather Dashboard (OpenWeatherMap)
 
 A modern React single‑page app showing current weather, 7‑day forecast, and hourly chart for searched cities. No login. Ocean Professional theme.
 
 ## Features
-- City search using Open‑Meteo Geocoding
+- City search using OpenWeatherMap Geocoding API
 - Current conditions card (icon, temp, feels like, wind, humidity)
 - 7‑day forecast grid
 - Hourly temperature line chart (Recharts)
@@ -34,10 +34,11 @@ Open http://localhost:3000
 - `geo_onboarded` — `"true"` once first‑load geolocation onboarding has been completed or skipped
 - `show_location_modal`, `location_blocked`, `location_banner_dismissed` — UI state for onboarding prompts
 
-## Environment (optional)
-Create `.env` from `.env.example` to override:
-- `REACT_APP_API_BASE` (default: https://api.open-meteo.com)
+## Environment
+Create `.env` from `.env.example` and set:
+- `REACT_APP_API_BASE` (default: https://api.openweathermap.org)
+- `REACT_APP_OPENWEATHER_API_KEY` (required; used for Geocoding, Current Weather, and One Call 3.0)
 
-## Notes
-- No API key required.
-- Data source: https://open-meteo.com/
+Notes:
+- Units mapping: the app maps °C/°F toggle to OpenWeatherMap `units=metric|imperial`. For metric, wind is converted from m/s to km/h for display.
+- Data source: https://openweathermap.org/api

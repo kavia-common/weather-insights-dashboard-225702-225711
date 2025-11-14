@@ -6,7 +6,7 @@ import CurrentWeatherCard from '../components/CurrentWeatherCard';
 import DailyForecast from '../components/DailyForecast';
 import HourlyChart from '../components/HourlyChart';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openMeteo.js';
+import { fetchForecast, normalizeUnits, defaultUnits } from '../lib/openWeather.js';
 import { detectMyLocation } from '../lib/geolocation.js';
 import LocationPermissionModal from '../components/LocationPermissionModal';
 
